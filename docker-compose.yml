@@ -1,0 +1,23 @@
+# Server Aurora in Docker: l'unico modo di installarlo su Linux.
+#
+#   1. metti in una cartella questo file, aurora.sh e .env (da env.example)
+#   2. docker compose up -d
+#
+# Al primo avvio scarica l'ultima versione stabile dal canale pubblico; poi il
+# server si aggiorna da solo (il programma sta nel volume ./data, il contenitore
+# si riavvia sul programma nuovo). Dati, certificati e chiave restano in ./data.
+services:
+  aurora:
+    image: alpine:3.22
+    container_name: aurora
+    restart: unless-stopped
+    network_mode: host          # niente NAT di Docker sull'UDP: latenza e CPU minime
+    env_file: .env
+    volumes:
+      - ./data:/data
+      - ./aurora.sh:/aurora.sh:ro
+    entrypoint: ["sh", "/aurora.sh"]
+    stop_grace_period: 10s
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
