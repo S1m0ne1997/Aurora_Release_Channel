@@ -1,5 +1,5 @@
 #!/bin/sh
-# Avvio del server Aurora nel contenitore (docker-compose.yml).
+# Avvio del server Aurora nell'immagine ghcr.io/s1m0ne1997/aurora.
 # Il programma vive in /data/bin: così si sostituisce da solo agli
 # aggiornamenti e sopravvive alla ricreazione del contenitore.
 set -eu
@@ -20,7 +20,8 @@ if [ ! -x "$BIN" ]; then
 	mv "$BIN.dl" "$BIN"
 fi
 
-: "${PUBLIC_IP:?imposta PUBLIC_IP in .env}"
+[ -n "${AURORA_STATE_KEY:-}" ] || unset AURORA_STATE_KEY  # vuota = chiave in data/state/key
+: "${PUBLIC_IP:?imposta PUBLIC_IP}"
 set -- -ip "$PUBLIC_IP" -rooms "${ROOMS:-Generale,Gaming,Musica,AFK}" -max "${MAX_PER_ROOM:-0}" \
 	-udp "${UDP_PORT:-7882}" -certs /data/certs -state /data/state
 if [ -n "${DOMAIN:-}" ]; then

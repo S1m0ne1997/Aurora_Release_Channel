@@ -34,7 +34,6 @@ mkdir -p "$DIR/data"
 cd "$DIR"
 echo ">> Scarico i file in $DIR"
 curl -fsSL -o docker-compose.yml "$RAW/docker-compose.yml"
-curl -fsSL -o aurora.sh "$RAW/aurora.sh"
 
 # 3. Configurazione (solo la prima volta)
 if [ ! -f .env ]; then
