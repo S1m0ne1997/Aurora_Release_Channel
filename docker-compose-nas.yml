@@ -1,0 +1,50 @@
+# Server Aurora in un solo file, per le interfacce dei NAS (ZimaOS, CasaOS,
+# Portainer...): Importa -> Docker Compose. Modifica solo "environment".
+name: aurora
+services:
+  aurora:
+    image: alpine:3.22
+    container_name: aurora
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PUBLIC_IP: 192.168.1.5        # IP del server (in casa: quello locale del NAS)
+      DOMAIN: ""                    # dominio, se c'è (porte 80 e 443)
+      PORT: "8080"                  # porta HTTPS senza dominio
+      UDP_PORT: "7882"              # audio
+      ROOMS: Generale,Gaming,Musica,AFK
+      AURORA_STATE_KEY: ""          # vuota = il server crea la chiave in data/state/key
+    volumes:
+      - /DATA/AppData/aurora:/data
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        set -eu
+        mkdir -p /data/bin /data/state /data/certs
+        BIN=/data/bin/aurora
+        if [ ! -x $$BIN ]; then
+          case $$(uname -m) in
+            x86_64) ARCH=amd64 ;;
+            aarch64|arm64) ARCH=arm64 ;;
+            *) echo "processore non supportato"; exit 1 ;;
+          esac
+          echo "primo avvio: scarico l'ultima versione stabile"
+          wget -q -O $$BIN.dl https://github.com/S1m0ne1997/Aurora_Release_Channel/releases/latest/download/aurora-linux-$$ARCH
+          chmod 755 $$BIN.dl
+          mv $$BIN.dl $$BIN
+        fi
+        [ -n "$$AURORA_STATE_KEY" ] || unset AURORA_STATE_KEY
+        set -- -ip "$$PUBLIC_IP" -rooms "$$ROOMS" -udp "$$UDP_PORT" -certs /data/certs -state /data/state
+        if [ -n "$$DOMAIN" ]; then set -- -domain "$$DOMAIN" "$$@"; else set -- -addr ":$$PORT" "$$@"; fi
+        cd /data
+        exec $$BIN "$$@"
+    logging:
+      driver: json-file
+      options: { max-size: "5m", max-file: "3" }
+x-casaos:
+  architectures: [amd64, arm64]
+  main: aurora
+  title: { en_us: Aurora }
+  category: Chat
+  port_map: "8080"
+  scheme: https
