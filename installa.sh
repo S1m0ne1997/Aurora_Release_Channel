@@ -84,7 +84,9 @@ docker compose logs aurora 2>/dev/null | grep -E "codice di configurazione|diven
 echo
 if [ -n "${DOMAIN:-}" ]; then
 	echo "Aurora è attivo: nel client usa l'indirizzo $DOMAIN"
+	echo "Pannello di gestione: https://$DOMAIN/pannello/"
 else
-	echo "Aurora è attivo: nel client usa l'indirizzo $IP:$PORT"
+	echo "Aurora è attivo: nel client usa l'indirizzo $PUBLIC_IP:$PORT"
+	echo "Pannello di gestione: https://$PUBLIC_IP:$PORT/pannello/"
 fi
 echo "Comandi utili (dalla cartella $DIR): docker compose logs -f   |   docker compose restart   |   docker compose down"
